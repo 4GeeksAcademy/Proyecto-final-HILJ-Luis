@@ -2,18 +2,38 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-class User(db.Model):
+# Tabla de relación many-to-many
+itinerary_tags_rel = db.Table('itinerary_tags_rel',
+    db.Column('itinerary_id', db.Integer, db.ForeignKey('itinerary.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+# class User(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
+#     password = db.Column(db.String(80), unique=False, nullable=False)
+#     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+
+#     def __repr__(self):
+#         return f'<User {self.email}>'
+
+#     def serialize(self):
+#         return {
+#             "id": self.id,
+#             "email": self.email,
+#             # do not serialize the password, its a security breach
+#         }
+
+#Tags Many To Many Revisar Juntos
+
+class Tag(db.Model):
+    __tablename__ = 'tag'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    itineraries = db.relationship('Itinerary', secondary=itinerary_tags_rel, backref=db.backref('tags', lazy='dynamic'))
 
-    def __repr__(self):
-        return f'<User {self.email}>'
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            # do not serialize the password, its a security breach
-        }
+class Itinerary(db.Model):
+    __tablename__ = 'itinerary'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    # Otros campos del itinerario

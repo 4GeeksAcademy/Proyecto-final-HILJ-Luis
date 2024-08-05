@@ -12,11 +12,36 @@ api = Blueprint('api', __name__)
 CORS(api)
 
 
-@api.route('/hello', methods=['POST', 'GET'])
-def handle_hello():
+@app.route('/tags', methods=['POST'])
+def create_tag():
+    name = request.json['name']
+    new_tag = Tag(name=name)
+    db.session.add(new_tag)
+    db.session.commit()
+    return jsonify({'message': 'Tag created successfully!'}), 201
 
-    response_body = {
-        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
-    }
+@app.route('/tags', methods=['GET'])
+def get_tags():
+    tags = Tag.query.all()
+    return jsonify([{'id': tag.id, 'name': tag.name} for tag in tags])
 
-    return jsonify(response_body), 200
+@app.route('/itineraries', methods=['POST'])
+def create_itinerary():
+    name = request.json['name']
+    tag_ids = request.json.get('tag_ids', [])
+    itinerary = Itinerary(name=name)
+    tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
+    itinerary.tags.extend(tags)
+    db.session.add(itinerary)
+    db.session.commit()
+    return jsonify({'message': 'Itinerary created successfully!'}), 201
+
+@app.route('/itineraries', methods=['GET'])
+def get_itineraries():
+    itineraries = Itinerary.query.all()
+    data = []
+    for itinerary in itineraries:
+        tags = [{'id': tag.id, 'name': tag.name} for tag in itinerary.tags]
+        data.append({'id': itinerary.id, 'name': itinerary.name, 'tags': tags})
+    return jsonify(data)
+
